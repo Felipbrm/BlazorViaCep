@@ -1,0 +1,61 @@
+﻿@page "/"
+@using BlazorViaCep.Models
+@inject HttpClient Http
+
+<PageTitle>Busca ViaCEP</PageTitle>
+
+<h1>Consulta de CEP</h1>
+
+<div style="margin-bottom: 20px;">
+    <label>Digite o CEP:</label>
+    <input @bind="cepBusca" placeholder="Ex: 01001000" />
+    <button @onclick="BuscarCep">Buscar</button>
+</div>
+
+@if (carregando)
+{
+    <p><em>A procurar...</em></p>
+}
+else if (endereco != null)
+{
+    if (endereco.Erro == "true")
+    {
+        <p style="color: red;">CEP não encontrado!</p>
+    }
+    else
+    {
+        <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+            <p><strong>Logradouro:</strong> @endereco.Logradouro</p>
+            <p><strong>Bairro:</strong> @endereco.Bairro</p>
+            <p><strong>Localidade/UF:</strong> @endereco.Localidade - @endereco.Uf</p>
+            <p><strong>CEP:</strong> @endereco.Cep</p>
+        </div>
+    }
+}
+
+@code {
+    private string cepBusca = string.Empty;
+    private Endereco? endereco;
+    private bool carregando = false;
+
+    private async Task BuscarCep()
+    {
+        if (string.IsNullOrWhiteSpace(cepBusca)) return;
+
+        carregando = true;
+        endereco = null;
+
+        try
+        {
+            endereco = await Http.GetFromJsonAsync<Endereco>($"https://viacep.com.br/ws/{cepBusca}/json/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro: {ex.Message}");
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+}
